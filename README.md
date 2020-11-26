@@ -6,11 +6,11 @@
 ## Example Training
 In the maddpg/experiments/ directory,
 
-'python train.py --scenario simple_tag --exp-name test --plots-dir ./learning_curves'
+`python train.py --scenario simple_tag --exp-name test --plots-dir ./learning_curves`
 
-* '--scenario' particle environment to use for training
-* '--exp-name' expriment name used to save checkpoints and learning curves
-* '--plots-dir' directory to store learning curve after training is done (as pkl file)
+* `--scenario` particle environment to use for training
+* `--exp-name` expriment name used to save checkpoints and learning curves
+* `--plots-dir` directory to store learning curve after training is done (as pkl file)
 
 ## Simple Tag Env
 Still fixing a few things.
