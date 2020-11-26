@@ -1,9 +1,14 @@
 **Status:** Archive (code is provided as-is, no updates expected)
 ## Installing
-1. Follow 'Getting Started' steps to install the particle environment.
-2. cd into maddpg directory and follow README.md instructions to install OpenAI's maddpg algorithm
+- create new virtual env  `python3 -m venv ma-env`
+-  cd into main rep and run `pip install -e .`
+-  cd into '/maddpg' repo and `pip install -e .`
 
+## Requirements
+- Tensorflow==1.14.0
+- Python >= 3.5.0
 ## Example Training
+
 In the maddpg/experiments/ directory,
 
 `python train.py --scenario simple_tag --exp-name test --plots-dir ./learning_curves`
