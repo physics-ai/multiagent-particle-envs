@@ -122,7 +122,7 @@ class Scenario(BaseScenario):
             #for a in good_agents:
                 #if self.is_collision(a, agent):
                     #agent.lives -= 3
-
+        return rew
         # agents are penalized for exiting the screen, so that they can be caught by the adversaries
         def bound(x):
             if x < 0.9:
