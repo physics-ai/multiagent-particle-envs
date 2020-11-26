@@ -2,16 +2,18 @@ import numpy as np
 from multiagent.core import World, Agent, Landmark
 from multiagent.scenario import BaseScenario
 
-
+import time
 class Scenario(BaseScenario):
     def make_world(self):
         world = World()
         # set any world properties first
         world.dim_c = 2
-        num_good_agents = 1
-        num_adversaries = 3
+        world.agent_lives = 1
+        world.adv_lives = 1
+        num_good_agents = 1 
+        num_adversaries = 2
         num_agents = num_adversaries + num_good_agents
-        num_landmarks = 2
+        num_landmarks = 1
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
         for i, agent in enumerate(world.agents):
@@ -19,8 +21,8 @@ class Scenario(BaseScenario):
             agent.collide = True
             agent.silent = True
             agent.adversary = True if i < num_adversaries else False
-            agent.size = 0.075 if agent.adversary else 0.05
-            agent.accel = 3.0 if agent.adversary else 4.0
+            agent.size = 0.050 if agent.adversary else 0.05
+            agent.accel = 1.0 if agent.adversary else 1.0
             #agent.accel = 20.0 if agent.adversary else 25.0
             agent.max_speed = 1.0 if agent.adversary else 1.3
         # add landmarks
@@ -29,9 +31,15 @@ class Scenario(BaseScenario):
             landmark.name = 'landmark %d' % i
             landmark.collide = True
             landmark.movable = False
-            landmark.size = 0.2
+            landmark.size = 0.15
             landmark.boundary = False
         # make initial conditions
+        print("Setting agent's lives...")
+        for i in range(len(world.agents)):
+            if world.agents[i].adversary:
+                world.agents[i].lives = world.agent_lives
+            elif not world.agents[i].adversary:
+                world.agents[i].lives = world.adv_lives
         self.reset_world(world)
         return world
 
@@ -50,8 +58,15 @@ class Scenario(BaseScenario):
             agent.state.c = np.zeros(world.dim_c)
         for i, landmark in enumerate(world.landmarks):
             if not landmark.boundary:
-                landmark.state.p_pos = np.random.uniform(-0.9, +0.9, world.dim_p)
+                landmark.state.p_pos = np.array([0, 0])
                 landmark.state.p_vel = np.zeros(world.dim_p)
+
+        print("Setting agent's lives...")
+        for i in range(len(world.agents)):
+            if world.agents[i].adversary:
+                world.agents[i].lives = world.agent_lives
+            elif not world.agents[i].adversary:
+                world.agents[i].lives = world.adv_lives
 
 
     def benchmark_data(self, agent, world):
@@ -89,15 +104,24 @@ class Scenario(BaseScenario):
     def agent_reward(self, agent, world):
         # Agents are negatively rewarded if caught by adversaries
         rew = 0
-        shape = False
+        shape = True
         adversaries = self.adversaries(world)
+        good_agents = self.good_agents(world)
+
         if shape:  # reward can optionally be shaped (increased reward for increased distance from adversary)
             for adv in adversaries:
                 rew += 0.1 * np.sqrt(np.sum(np.square(agent.state.p_pos - adv.state.p_pos)))
         if agent.collide:
             for a in adversaries:
                 if self.is_collision(a, agent):
+                    #print([a.lives for a in world.agents])
                     rew -= 10
+                    agent.lives -= 1
+                    ##print([a.lives for a in world.agents])
+                    #time.sleep(10)
+            #for a in good_agents:
+                #if self.is_collision(a, agent):
+                    #agent.lives -= 3
 
         # agents are penalized for exiting the screen, so that they can be caught by the adversaries
         def bound(x):
@@ -115,7 +139,7 @@ class Scenario(BaseScenario):
     def adversary_reward(self, agent, world):
         # Adversaries are rewarded for collisions with agents
         rew = 0
-        shape = False
+        shape = True
         agents = self.good_agents(world)
         adversaries = self.adversaries(world)
         if shape:  # reward can optionally be shaped (decreased reward for increased distance from agents)
@@ -127,6 +151,15 @@ class Scenario(BaseScenario):
                     if self.is_collision(ag, adv):
                         rew += 10
         return rew
+
+    def adv_collisions(self, world):
+        # Assuming one or two adversaries
+        adv = self.adversaries(world)
+        adv1 = adv[0]
+        for a in adv[1:]:
+            if self.is_collision(a, adv1):
+                return True
+        return False # There is no collisions between adversaries
 
     def observation(self, agent, world):
         # get positions of all entities in this agent's reference frame
@@ -145,3 +178,21 @@ class Scenario(BaseScenario):
             if not other.adversary:
                 other_vel.append(other.state.p_vel)
         return np.concatenate([agent.state.p_vel] + [agent.state.p_pos] + entity_pos + other_pos + other_vel)
+
+    def done(self, world):
+        ep_done = [False, None]
+        done_n = [a.lives <= 0 for a in world.agents]
+        good_agents = self.good_agents(world)
+        adv = self.adversaries(world)
+
+        if all(a.lives <= 0 for a in good_agents):
+            #print('Agents lost their lives!')
+            ep_done = [True, 'w']
+            #print(done_n, ep_done)
+            #time.sleep(2)
+        if self.adv_collisions(world):
+            #print('Adversaries (us) collided!')
+            ep_done = [True, 'l']
+            #print(done_n, ep_done)
+            #time.sleep(2)
+        return done_n, ep_done

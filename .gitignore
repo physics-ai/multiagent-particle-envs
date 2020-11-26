@@ -1,3 +1,8 @@
 __pycache__/
 *.egg-info/
 *.pyc
+*.out
+*.pkl
+*.txt
+*.png
+*.jpg

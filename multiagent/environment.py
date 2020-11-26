@@ -1,8 +1,10 @@
 import gym
+import time
 from gym import spaces
 from gym.envs.registration import EnvSpec
 import numpy as np
 from multiagent.multi_discrete import MultiDiscrete
+import logging
 
 # environment for all agents in the multiagent world
 # currently code assumes that no agents will be created/destroyed at runtime!
@@ -12,11 +14,12 @@ class MultiAgentEnv(gym.Env):
     }
 
     def __init__(self, world, reset_callback=None, reward_callback=None,
-                 observation_callback=None, info_callback=None,
-                 done_callback=None, shared_viewer=True):
+                 observation_callback=None, done_callback=None, info_callback=None,
+                shared_viewer=True):
 
         self.world = world
         self.agents = self.world.policy_agents
+
         # set required vectorized gym env property
         self.n = len(world.policy_agents)
         # scenario callbacks
@@ -26,7 +29,7 @@ class MultiAgentEnv(gym.Env):
         self.info_callback = info_callback
         self.done_callback = done_callback
         # environment parameters
-        self.discrete_action_space = True
+        self.discrete_action_space = False
         # if true, action is a number 0...N, otherwise action is a one-hot N-dimensional vector
         self.discrete_action_input = False
         # if true, even the action is continuous, action will be performed discretely
@@ -89,19 +92,23 @@ class MultiAgentEnv(gym.Env):
         # advance world state
         self.world.step()
         # record observation for each agent
-        for agent in self.agents:
+        #assert len(self.agents) == 4
+        done_n, ep_done = self._get_done()
+        for i, agent in enumerate(self.agents):
             obs_n.append(self._get_obs(agent))
             reward_n.append(self._get_reward(agent))
-            done_n.append(self._get_done(agent))
-
+            done_n.append(done_n[i])
             info_n['n'].append(self._get_info(agent))
+            #print(self._get_info(agent))
+            #time.sleep(2.0)
 
         # all agents get total reward in cooperative case
         reward = np.sum(reward_n)
         if self.shared_reward:
             reward_n = [reward] * self.n
 
-        return obs_n, reward_n, done_n, info_n
+
+        return obs_n, reward_n, done_n, info_n, ep_done[0], ep_done[1]
 
     def reset(self):
         # reset world
@@ -129,10 +136,10 @@ class MultiAgentEnv(gym.Env):
 
     # get dones for a particular agent
     # unused right now -- agents are allowed to go beyond the viewing screen
-    def _get_done(self, agent):
+    def _get_done(self):
         if self.done_callback is None:
             return False
-        return self.done_callback(agent, self.world)
+        return self.done_callback(self.world)
 
     # get reward for a particular agent
     def _get_reward(self, agent):
@@ -142,6 +149,7 @@ class MultiAgentEnv(gym.Env):
 
     # set env action for a particular agent
     def _set_action(self, action, agent, action_space, time=None):
+        #print('Action from action input:', action)
         agent.action.u = np.zeros(self.world.dim_p)
         agent.action.c = np.zeros(self.world.dim_c)
         # process action
@@ -174,12 +182,14 @@ class MultiAgentEnv(gym.Env):
                     agent.action.u[0] += action[0][1] - action[0][2]
                     agent.action.u[1] += action[0][3] - action[0][4]
                 else:
+                    #print("here!", action[0])
                     agent.action.u = action[0]
             sensitivity = 5.0
             if agent.accel is not None:
                 sensitivity = agent.accel
             agent.action.u *= sensitivity
             action = action[1:]
+            #print(action)
         if not agent.silent:
             # communication action
             if self.discrete_action_input:
@@ -210,7 +220,7 @@ class MultiAgentEnv(gym.Env):
                     else:
                         word = alphabet[np.argmax(other.state.c)]
                     message += (other.name + ' to ' + agent.name + ': ' + word + '   ')
-            print(message)
+            #print(message)
 
         for i in range(len(self.viewers)):
             # create viewers (if necessary)

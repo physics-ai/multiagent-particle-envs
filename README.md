@@ -1,4 +1,19 @@
 **Status:** Archive (code is provided as-is, no updates expected)
+## Installing
+1. Follow 'Getting Started' steps to install the particle environment.
+2. cd into maddpg directory and follow README.md instructions to install OpenAI's maddpg algorithm
+
+## Example Training
+In the maddpg/experiments/ directory,
+
+'python train.py --scenario simple_tag --exp-name test --plots-dir ./learning_curves'
+
+* '--scenario' particle environment to use for training
+* '--exp-name' expriment name used to save checkpoints and learning curves
+* '--plots-dir' directory to store learning curve after training is done (as pkl file)
+
+## Simple Tag Env
+Still fixing a few things.
 
 # Multi-Agent Particle Environment
 
