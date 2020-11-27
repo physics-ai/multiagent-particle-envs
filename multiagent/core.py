@@ -1,5 +1,12 @@
 import numpy as np
 
+def toroidal(x):
+    if x<-1.0:
+        x = 1.0 + (x-int(x))                    
+    if x>1.0:
+        x = -1.0 + (x-int(x))                    
+    return x
+
 # physical/external base state of all entites
 class EntityState(object):
     def __init__(self):
@@ -167,6 +174,12 @@ class World(object):
                     entity.state.p_vel = entity.state.p_vel / np.sqrt(np.square(entity.state.p_vel[0]) +
                                                                   np.square(entity.state.p_vel[1])) * entity.max_speed
             entity.state.p_pos += entity.state.p_vel * self.dt
+
+            # wrap around
+            #print("entity[%s].state.p_pos: %s" % (i, entity.state.p_pos))
+            for j, epos in enumerate(entity.state.p_pos):
+                entity.state.p_pos[j] = toroidal(epos)                    
+                                
 
     def update_agent_state(self, agent):
         # set communication state (directly for now)
