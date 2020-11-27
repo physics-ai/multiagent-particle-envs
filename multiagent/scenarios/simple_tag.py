@@ -13,7 +13,7 @@ class Scenario(BaseScenario):
         num_good_agents = 1 
         num_adversaries = 2
         num_agents = num_adversaries + num_good_agents
-        num_landmarks = 1
+        num_landmarks = 0
         # add agents
         world.agents = [Agent() for i in range(num_agents)]
         for i, agent in enumerate(world.agents):
@@ -24,7 +24,7 @@ class Scenario(BaseScenario):
             agent.size = 0.050 if agent.adversary else 0.05
             agent.accel = 1.0 if agent.adversary else 1.0
             #agent.accel = 20.0 if agent.adversary else 25.0
-            agent.max_speed = 1.0 if agent.adversary else 1.3
+            agent.max_speed = 1.0 if agent.adversary else 1.0
         # add landmarks
         world.landmarks = [Landmark() for i in range(num_landmarks)]
         for i, landmark in enumerate(world.landmarks):
@@ -47,7 +47,7 @@ class Scenario(BaseScenario):
     def reset_world(self, world):
         # random properties for agents
         for i, agent in enumerate(world.agents):
-            agent.color = np.array([0.35, 0.85, 0.35]) if not agent.adversary else np.array([0.85, 0.35, 0.35])
+            agent.color = np.array([1.0, 0.0, 0.0]) if not agent.adversary else np.array([0.0, 0.0, 1.0])
             # random properties for landmarks
         for i, landmark in enumerate(world.landmarks):
             landmark.color = np.array([0.25, 0.25, 0.25])
