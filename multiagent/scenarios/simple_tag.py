@@ -87,6 +87,12 @@ class Scenario(BaseScenario):
         dist_min = agent1.size + agent2.size
         return True if dist < dist_min else False
 
+    def is_collision_adv(self, agent1, agent2):
+        delta_pos = agent1.state.p_pos - agent2.state.p_pos
+        dist = np.sqrt(np.sum(np.square(delta_pos)))
+        dist_min = agent1.size + agent2.size + 10
+        return True if dist < dist_min else False
+
     # return all agents that are not adversaries
     def good_agents(self, world):
         return [agent for agent in world.agents if not agent.adversary]
@@ -157,7 +163,7 @@ class Scenario(BaseScenario):
         adv = self.adversaries(world)
         adv1 = adv[0]
         for a in adv[1:]:
-            if self.is_collision(a, adv1):
+            if self.is_collision_adv(a, adv1):
                 return True
         return False # There is no collisions between adversaries
 
