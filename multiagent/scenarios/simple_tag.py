@@ -100,7 +100,7 @@ class Scenario(BaseScenario):
     def is_landmark_collision(self, agent, landmark):
         delta_pos = agent.state.p_pos - landmark.state.p_pos
         dist = np.sqrt(np.sum(np.square(delta_pos)))
-        dist_min = agent1.size/2 + landmark.size
+        dist_min = agent.size/2 + landmark.size
         return True if dist < dist_min else False
 
     # return all agents that are not adversaries
